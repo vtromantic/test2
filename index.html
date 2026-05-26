@@ -893,6 +893,14 @@ setTimeout(() => {
 
 }, 1500);
 
+player.style.opacity = '1';
+
+        player.style.left = '55%';
+
+        player.style.bottom = '80px';
+
+        player.classList.remove('boarding');
+
 
         }, 4500);
 
@@ -945,14 +953,6 @@ function playerActionCutscene() {
         shipDialogue.classList.remove('show');
         
         starField.classList.remove('moving');
-        
-        player.style.opacity = '1';
-
-        player.style.left = '55%';
-
-        player.style.bottom = '80px';
-
-        player.classList.remove('boarding');
 
         gamePhase = 'landing';
 
