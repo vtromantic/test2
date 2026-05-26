@@ -881,19 +881,20 @@
         }, 100);
 
         // termina pouso
-        // termina pouso
 setTimeout(() => {
 
     shipDialogue.querySelector('p').textContent = 'Pouso concluído!';
 
     shipDialogue.classList.add('show');
 
+    // some mensagem depois
     setTimeout(() => {
 
         shipDialogue.classList.remove('show');
 
     }, 2000);
 
+    // mostra player
     player.style.opacity = '1';
 
     player.style.left = '55%';
@@ -902,11 +903,10 @@ setTimeout(() => {
 
     player.classList.remove('boarding');
 
-}, 800);
-
 }, 4500);
 
-    }, 500);
+}, 500);
+
     }
 
     nameInput.addEventListener('keypress', function(e) {
