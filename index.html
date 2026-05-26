@@ -881,19 +881,16 @@
         }, 100);
 
         // termina pouso
-        setTimeout(() => {
-
-            shipDialogue.querySelector('p').textContent = 'Pouso concluído!';
-
-shipDialogue.classList.add('show');
-
+        // termina pouso
 setTimeout(() => {
 
-    shipDialogue.classList.remove('show');
+    shipDialogue.querySelector('p').textContent = 'Pouso concluído!';
 
-}, 1500);
+    shipDialogue.classList.add('show');
 
-player.style.opacity = '1';
+    setTimeout(() => {
+
+        player.style.opacity = '1';
 
         player.style.left = '55%';
 
@@ -901,8 +898,9 @@ player.style.opacity = '1';
 
         player.classList.remove('boarding');
 
+    }, 800);
 
-        }, 4500);
+}, 4500);
 
     }, 500);
     }
