@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Pixel - Aventura</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .game-screen {
+            width: 640px;
+            height: 480px;
+            background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0f0f23 100%);
+            position: relative;
+            border: 4px solid #333;
+            overflow: hidden;
+        }
+
+        .background-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    opacity: 0;
+
+    transition: opacity 1s ease;
+
+    z-index: 0;
+
+    pointer-events: none;
+}
+
+        .background-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+        .stars {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    transition: opacity 1s;
+}
+
+        .star-field {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .star-field.moving {
+            animation: scrollStars 0.3s linear infinite;
+        }
+
+        @keyframes scrollStars {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50px); }
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        .spaceship {
+            position: absolute;
+            top: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 64px;
+            height: 64px;
+            image-rendering: pixelated;
+            z-index: 50;
+            opacity: 1;
+        }
+
+        .spaceship::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 30px;
+            background: radial-gradient(ellipse, rgba(255,200,100,0.8) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: flicker 0.1s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .player.boarding {
+    bottom: 250px;
+}
+        .teleport-beam.active {
+            animation: beamUp 1.5s ease-out forwards;
+        }
+
+        @keyframes beamUp {
+            0% { height: 0px; opacity: 0; }
+            20% { height: 200px; opacity: 1; }
+            80% { height: 200px; opacity: 1; }
+            100% { height: 250px; opacity: 0; }
+        }
+
+        .ship-bubble {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background-color: #ffffff;
+            border: 3px solid #000000;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 8px;
+            color: #000000;
+            white-space: normal;
+            text-align: center;
+            z-index: 15;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 350px;
+            min-width: 200px;
+            line-height: 1.6;
+        }
+
+        .ship-bubble.show {
+            transform: translateX(-50%) scale(1);
+        }
+
+        .ship-bubble::after {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 10px 10px 10px;
+            border-style: solid;
+            border-color: #000000 transparent transparent transparent;
+        }
+
+        .ship-bubble::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 8px 8px 8px;
+            border-style: solid;
+            border-color: #ffffff transparent transparent transparent;
+            z-index: 1;
+        }
+
+        .player-bubble {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background-color: #fff;
+            border: 3px solid #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 8px;
+            z-index: 20;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 300px;
+            min-width: 150px;
+            white-space: normal;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .player-bubble.show {
+            transform: translateX(-50%) scale(1);
+        }
+
+        .player-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #000 transparent transparent;
+        }
+
+        .player-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px 8px 0;
+            border-style: solid;
+            border-color: #fff transparent transparent;
+            z-index: 1;
+        }
+
+        .player {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 48px;
+
+    background-image: url('./image/she2.png');
+    background-size: 32px 48px;
+    background-repeat: no-repeat;
+
+    image-rendering: pixelated;
+
+    opacity: 0;
+
+    z-index: 50;
+
+    transition:
+        bottom 1s ease,
+        opacity 1s ease;
+}
+.scene-image {
+
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    opacity: 0;
+
+    transition: opacity 1s ease;
+
+    z-index: 51;
+
+    pointer-events: none;
+}
+
+.player.powering {
+
+    animation: powerMove 3s linear forwards;
+
+}
+
+@keyframes powerMove {
+
+    0% {
+        transform: translateX(-50%) scale(1);
+        filter: brightness(1);
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1.1);
+        filter: brightness(2);
+    }
+
+    100% {
+        transform: translateX(-50%) scale(1);
+        filter: brightness(1);
+    }
+}
+
+      .npc {
+    position: absolute;
+
+    bottom: 80px;
+
+    right: -100px;
+
+    width: 32px;
+    height: 48px;
+
+    image-rendering: pixelated;
+
+    z-index: 50;
+
+    transition: right 1s ease-out, opacity 1s ease;
+
+    opacity: 0;
+}
+
+/* posição final */
+.npc.enter {
+    right: 120px;
+}
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(to bottom, #1a1a2e, #0a0a1a);
+            border-top: 4px solid #333;
+        }
+
+        #npcBubble {
+    bottom: 150px;
+
+    left: auto;
+
+    right:-5px;
+
+    transform: scale(0);
+
+    transform-origin: bottom right;
+}
+
+#npcBubble.show {
+    transform: scale(1);
+}
+
+        .ground.hidden {
+            opacity: 0;
+        }
+
+        .game-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 8px;
+            opacity: 0;
+        }
+
+        .game-title.visible {
+            opacity: 1;
+        }
+
+        .continue-hint {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #888;
+            font-size: 8px;
+            opacity: 0;
+            animation: blink 1s infinite;
+        }
+
+        .continue-hint.show {
+            opacity: 1;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .advance-hint {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #aaa;
+            font-size: 7px;
+            opacity: 0;
+            animation: blink 1s infinite;
+        }
+
+        .advance-hint.show {
+            opacity: 1;
+        }
+
+        .next-scene-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ffaa;
+            font-size: 10px;
+            opacity: 0;
+            text-align: center;
+            text-shadow: 0 0 10px #00ffaa;
+        }
+
+        .next-scene-hint.show {
+            animation: pulseText 1.5s ease-in-out infinite;
+            opacity: 1;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        .document-scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .document-scene.show {
+            display: flex;
+        }
+
+        .document-scene.hiding {
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .document-image {
+            width: 420px;
+            image-rendering: pixelated;
+        }
+
+        .document-input {
+            position: absolute;
+            top: 295px;
+            left: 150px;
+            width: 145px;
+            height: 24px;
+            border: 2px solid #000;
+            background: white;
+            padding: 4px;
+            outline: none;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 7px;
+        }
+
+        /* Cutscene 2: Mensagem de diálogo */
+        .ship-dialogue {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 30;
+            opacity: 0;
+        }
+
+        .ship-dialogue.show {
+            opacity: 1;
+        }
+
+        .ship-dialogue p {
+    color: #fff;
+    font-size: 14px;
+    line-height: 2;
+    text-shadow: 2px 2px #000;
+}
+
+        .ship-dialogue .arrow {
+            color: #00ffaa;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 0.5s ease-in-out infinite;
+            margin-top: -10px;
+        }
+
+        .proposal-screen {
+
+    position: absolute;
+
+    inset: 0;
+
+    background: rgba(0,0,0,0.8);
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: opacity 1s ease;
+
+    z-index: 200;
+}
+
+.proposal-screen.show {
+
+    opacity: 1;
+
+    pointer-events: all;
+}
+
+.proposal-box {
+
+    background: #fff;
+
+    border: 4px solid #000;
+
+    padding: 30px;
+
+    text-align: center;
+
+    width: 400px;
+}
+
+.proposal-box h2 {
+
+    font-size: 14px;
+
+    margin-bottom: 30px;
+
+    color: #000;
+
+    line-height: 1.8;
+}
+
+.proposal-buttons {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 20px;
+}
+
+.proposal-buttons button {
+
+    font-family: 'Press Start 2P', cursive;
+
+    padding: 15px 20px;
+
+    border: 3px solid #000;
+
+    background: white;
+
+    cursor: pointer;
+
+    transition: transform 0.2s;
+}
+
+.proposal-buttons button:hover {
+
+    transform: scale(1.1);
+}
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(5px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="proposal-screen" id="proposalScreen">
+
+    <div class="proposal-box">
+
+        <h2>Quer namorar comigo?</h2>
+
+        <div class="proposal-buttons">
+
+            <button id="yesBtn">SIM</button>
+
+            <button id="noBtn">NÃO</button>
+
+        </div>
+
+    </div>
+
+</div>
+    <div class="game-screen" id="screen">
+     
+        <div class="background-container" id="bgContainer">
+    <img src="image/theemper.png" id="background" class="background-image">
+</div>
+        <img src="image/emperador.png" class="npc" id="npc">
+
+        <div class="stars" id="stars">
+            <div class="star-field" id="starField"></div>
+        </div>
+        
+        <div class="game-title" id="title">QUIZ PIXEL ADVENTURE</div>
+        
+        <img src="image/navepixel.png" class="spaceship" id="spaceship">
+        
+        <div class="teleport-beam" id="teleportBeam"></div>
+        
+        <div class="ship-bubble" id="shipBubble1">
+            colocamos você aqui pela ordem do nosso imperador viltrumita (vitor sinuquinha), mas não se preocupe, você pode sair...
+        </div>
+        
+        <div class="ship-bubble" id="shipBubble2">
+            simples! basta assinar esse papelzinho aqui, e a gente te leva pra casa rapidinho...
+        </div>
+        
+        <div class="player" id="player"></div>
+        
+        <div class="player-bubble" id="playerBubble1">
+            oh, onde estou?
+        </div>
+        
+        <div class="player-bubble" id="playerBubble2">
+            posso? como?
+        </div>
+
+        <div class="player-bubble" id="npcBubble">
+        Posso comandar exercitos...<br>
+        Mas sem você, não sou um rei...<br>
+        Não há imperio sem rainha...
+        </div>
+
+        <img src="image/emperadorknees.png" class="scene-image" id="sceneImage1">
+        <img src="image/emperadorwedding.png" class="scene-image" id="sceneImage2">
+
+        <div class="document-scene" id="documentScene">
+            <img src="image/certidao-de-casamento.png" class="document-image">
+            <input type="text" id="nameInput" class="document-input" placeholder="Digite aqui...">
+        </div>
+        
+        <div class="ground" id="ground"></div>
+        
+        <div class="advance-hint" id="advanceHint">▼ Clique para continuar</div>
+        
+        <div class="continue-hint" id="continueHint">FIM DA CUTSCENE</div>
+
+        <div class="next-scene-hint" id="nextSceneHint">
+            ★ NOIVA RESGATADA ★<br><br>Aguarde...
+        </div>
+
+        <!-- Cutscene 2: NAVE VOANDO -->
+        <div class="ship-dialogue" id="shipDialogue">
+            <p>Viajando pelo espaço...</p>
+            <p class="arrow">▼</p>
+        </div>
+    </div>
+
+
+<script>
+    const npc = document.getElementById('npc');
+    const npcBubble = document.getElementById('npcBubble');
+    const spaceship = document.getElementById('spaceship');
+    const player = document.getElementById('player');
+    const screen = document.getElementById('screen');
+    const starField = document.getElementById('starField');
+    const title = document.getElementById('title');
+    const advanceHint = document.getElementById('advanceHint');
+    const continueHint = document.getElementById('continueHint');
+    const documentScene = document.getElementById('documentScene');
+    const nameInput = document.getElementById('nameInput');
+    const teleportBeam = document.getElementById('teleportBeam');
+    const nextSceneHint = document.getElementById('nextSceneHint');
+    const ground = document.getElementById('ground');
+    const shipDialogue = document.getElementById('shipDialogue');
+    const background = document.getElementById('background');
+    const bgContainer = document.getElementById('bgContainer');
+    const sceneImage1 = document.getElementById('sceneImage1');
+    const sceneImage2 = document.getElementById('sceneImage2');
+    const proposalScreen = document.getElementById('proposalScreen');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    const bubbles = [
+        { element: 'playerBubble1', type: 'player' },
+        { element: 'shipBubble1', type: 'ship' },
+        { element: 'playerBubble2', type: 'player' },
+        { element: 'shipBubble2', type: 'ship' }
+    ];
+
+    let currentBubble = 0;
+    let dialogueActive = true;
+    let gamePhase = 'cutscene1';
+    let landingStage = 0;
+
+    function createStars() {
+        for (let i = 0; i < 40; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = (Math.random() * 200 - 50) + '%';
+            star.style.top = (Math.random() * 80) + '%';
+            star.style.width = (Math.random() * 2 + 1) + 'px';
+            star.style.height = star.style.width;
+            star.style.opacity = Math.random() * 0.5 + 0.3;
+            starField.appendChild(star);
+        }
+    }
+
+   function showNextBubble() {
+
+    if (currentBubble >= bubbles.length) {
+
+    dialogueActive = false;
+
+    advanceHint.classList.remove('show');
+
+    setTimeout(() => {
+
+        documentScene.classList.add('show');
+
+        nameInput.focus();
+
+    }, 500);
+
+    return;
+
+    }
+
+    const bubble = bubbles[currentBubble];
+
+    const element = document.getElementById(bubble.element);
+
+    if (element) {
+
+        element.classList.add('show');
+
+        currentBubble++;
+
+        if (currentBubble < bubbles.length) {
+
+            setTimeout(() => {
+
+                advanceHint.classList.add('show');
+
+            }, 500);
+
+        }
+    }
+   }
+
+    function hideCurrentBubble() {
+        if (currentBubble > 0) {
+            const prevBubble = bubbles[currentBubble - 1];
+            const element = document.getElementById(prevBubble.element);
+            if (element) {
+                element.classList.remove('show');
+            }
+        }
+    }
+
+    function playCutscene() {
+        setTimeout(() => {
+            spaceship.style.opacity = '1';
+        }, 500);
+
+        setTimeout(() => {
+            player.style.opacity = '1';
+            startFall();
+        }, 1500);
+
+        setTimeout(() => {
+            showNextBubble();
+        }, 2500);
+    }
+
+    let fallPosition = 220;
+    let falling = false;
+    
+    function startFall() {
+        falling = true;
+        fall();
+    }
+    
+    function fall() {
+        if (!falling) return;
+        
+        fallPosition -= 8;
+        player.style.bottom = fallPosition + 'px';
+        
+        if (fallPosition > 80) {
+            requestAnimationFrame(fall);
+        } else {
+            player.style.bottom = '80px';
+            falling = false;
+        }
+    }
+
+    function teleportBackToShip() {
+
+    teleportBeam.classList.add('active');
+
+    setTimeout(() => {
+
+        player.classList.add('boarding');
+
+    }, 300);
+
+    // SOME SOMENTE AQUI
+    setTimeout(() => {
+
+        player.style.opacity = '0';
+
+    }, 1000);
+
+    setTimeout(() => {
+
+        documentScene.classList.remove('show');
+
+        teleportBeam.classList.remove('active');
+
+        spaceship.style.top = '120px';
+
+        nextSceneHint.classList.add('show');
+
+        setTimeout(() => {
+
+            startFlyScene();
+
+        }, 2000);
+
+    }, 1500);
+}
+
+    function startFlyScene() {
+        gamePhase = 'flying';
+        
+        nextSceneHint.classList.remove('show');
+        ground.classList.add('hidden');
+        spaceship.style.top = '200px';
+        
+        setTimeout(() => {
+            starField.classList.add('moving');
+        }, 500);
+        
+        setTimeout(() => {
+            shipDialogue.classList.add('show');
+        }, 1000);
+    }
+
+    // NOVA CUTSCENE: POUSO
+    function startLanding() {
+
+    gamePhase = 'landing';
+
+    // para estrelas
+    starField.classList.remove('moving');
+
+    // esconde cena espacial
+    document.getElementById('stars').style.opacity = '0';
+
+    ground.style.opacity = '0';
+
+    shipDialogue.classList.remove('show');
+
+    // nave desaparece da viagem
+    spaceship.style.opacity = '0';
+
+    setTimeout(() => {
+
+        // mostra planeta
+        bgContainer.style.opacity = '1';
+
+        // reposiciona nave acima da tela
+        spaceship.style.transition = 'none';
+
+        spaceship.style.top = '-120px';
+
+        spaceship.style.opacity = '1';
+
+                // pequena pausa
+        setTimeout(() => {
+
+            // anima descida
+            spaceship.style.transition = 'top 4s linear';
+
+            spaceship.style.top = '300px';
+
+        }, 100);
+
+        // termina pouso
+        setTimeout(() => {
+
+            shipDialogue.querySelector('p').textContent = 'Pouso concluído!';
+
+shipDialogue.classList.add('show');
+
+setTimeout(() => {
+
+    shipDialogue.classList.remove('show');
+
+}, 1500);
+
+
+        }, 4500);
+
+    }, 500);
+    }
+
+    nameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && nameInput.value.trim() !== '') {
+            documentScene.classList.add('hiding');
+            
+            setTimeout(() => {
+                documentScene.classList.remove('show');
+                documentScene.classList.remove('hiding');
+                teleportBackToShip();
+            }, 500);
+        }
+    });
+    
+function playerActionCutscene() {
+
+    // começa animação
+    player.classList.add('powering');
+
+    // aqui você pode trocar imagem no meio da animação
+    setTimeout(() => {
+
+        player.style.backgroundImage = "url('image/novaImagem.png')";
+
+    }, 1500);
+
+    // termina animação
+    setTimeout(() => {
+
+        player.classList.remove('powering');
+
+        console.log('cutscene terminou');
+
+    }, 3000);
+}
+
+   screen.addEventListener('click', function() {
+
+    // CUTSCENE DO VOO
+    if (gamePhase === 'flying') {
+        startLanding();
+        document.getElementById('stars').style.opacity = '0';
+        
+        ground.style.opacity = '0';
+        
+        shipDialogue.classList.remove('show');
+        
+        starField.classList.remove('moving');
+        
+        player.style.opacity = '1';
+
+        player.style.left = '55%';
+
+        player.style.bottom = '80px';
+
+        player.classList.remove('boarding');
+
+        gamePhase = 'landing';
+
+        bgContainer.style.opacity = '1';
+        return;
+    }
+    
+if (gamePhase === 'landing') {
+
+    // clique 1 → npc entra
+    if (landingStage === 0) {
+
+        npc.style.opacity = '1';
+
+        npc.classList.add('enter');
+
+        landingStage++;
+
+        return;
+    }
+
+    // clique 2 → fala npc
+    if (landingStage === 1) {
+
+        npcBubble.classList.add('show');
+
+        landingStage++;
+
+        return;
+    }
+
+    // clique 3 → inicia imagens
+    if (landingStage === 2) {
+
+        npcBubble.classList.remove('show');
+
+        // some tudo
+        spaceship.style.opacity = '0';
+        player.style.opacity = '0';
+        npc.style.opacity = '0';
+
+        // mostra imagens
+        sceneImage1.style.opacity = '1';
+
+        setTimeout(() => {
+
+            sceneImage1.style.opacity = '0';
+
+            sceneImage2.style.opacity = '1';
+
+        }, 3000);
+
+        setTimeout(() => {
+
+            sceneImage2.style.opacity = '0';
+
+setTimeout(() => {
+
+    proposalScreen.classList.add('show');
+
+}, 1000);
+
+gamePhase = 'proposal';
+
+        }, 6000);
+
+        landingStage++;
+
+        return;
+    }
+}
+    // CUTSCENE FINAL
+    if (gamePhase === 'complete') {
+        return;
+    }
+
+    // DIALOGOS
+    if (!dialogueActive) {
+        return;
+    }
+
+    hideCurrentBubble();
+    advanceHint.classList.remove('show');
+
+    setTimeout(() => {
+        showNextBubble();
+    }, 300);
+});
+    // AQUI EMBAIXO
+noBtn.addEventListener('mouseover', () => {
+
+    const maxX = 500;
+    const maxY = 350;
+
+    noBtn.style.position = 'absolute';
+
+    noBtn.style.left = Math.random() * maxX + 'px';
+
+    noBtn.style.top = Math.random() * maxY + 'px';
+});
+
+
+
+yesBtn.addEventListener('click', () => {
+
+    proposalScreen.innerHTML = `
+
+        <div class="proposal-box">
+
+            <h2>SABIA QUE CLICARIA SIM 💖</h2>
+
+        </div>
+
+    `;
+});
+
+    createStars();
+    playCutscene();
+</script>
+</body>
+</html>
